@@ -45,10 +45,12 @@ sudo rm /etc/apt/sources.list.d/focal-security.list**
 
 Далее - по инструкции
 
-создадим каталог для данных
+Создадим каталог для данных
+
 **root@mdb1:/home/vassaev# sudo mkdir /home/mongo && sudo mkdir /home/mongo/db1 && sudo chmod 777 /home/mongo/db1**
 
-запустим монго с параметрами для этого каталога
+Запустим монго с параметрами для этого каталога
+
 **root@mdb1:/home/vassaev# mongod --dbpath /home/mongo/db1 --port 27001 --fork --logpath /home/mongo/db1/db1.log --pidfilepath /home/mongo/db1/db1.pid**
 ```log
 about to fork child process, waiting until server is ready for connections.
@@ -61,7 +63,7 @@ child process started successfully, parent exiting
 root        2395  3.2  9.7 2599784 96980 ?       Sl   15:52   0:00 mongod --dbpath /home/mongo/db1 --port 27001 --fork --logpath /home/mongo/db1/db1.log --pidfilepath /home/mongo/db1/db1.pid
 ```
 
-добавляем пользователя
+Добавляем пользователя
 **mongosh --port 27001**
 *test> use admin
 admin> db.createUser( { user: "root", pwd: "otus", roles: [ "userAdminAnyDatabase", "dbAdminAnyDatabase", "readWriteAnyDatabase" ] } )
@@ -73,6 +75,7 @@ admin> exit*
 **systemctl restart mongod**
 
 ###Загрузка данных 
+
 Данные по Fakenews с https://www.kaggle.com/competitions/fake-news/data?select=train.csv
 С помощью sftp загружаем данные в /var/www-data
 Загружаем данные в mongo
@@ -89,14 +92,17 @@ Enter password for mongo user:
 '''
 ```
 
-№№№ Запросы
+### Запросы
+
 Всего документов
+
 **otus> db.fakenews.countDocuments()**
 ```log
 20800
 ```
 
 Вывести 2 документа
+
 **otus> db.fakenews.find().limit(2)**
 ```log
 [
