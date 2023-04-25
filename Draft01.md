@@ -190,8 +190,10 @@ Enter password for mongo user:
 ]
 ```
 
-Рейтинг от правдивых до лгунов
-**```otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}}]).sort({"count_fake":1,"count_all":-1})```**
+Рейтинг от правдивых-плодовитых до лгунов
+
+**```
+otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}}]).sort({"count_fake":1,"count_all":-1})```**
 ```js
 [
   { _id: 'Jerome Hudson', count_fake: 0, count_all: 166 },
@@ -218,7 +220,9 @@ Enter password for mongo user:
 ```
 
 Авторы, которые допустили хотя бы одну фейковую новость
-**```otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}},{$match:{"count_fake":{$gt:0}}}]).sort({"count_fake":1,"count_all":-1})```**
+
+**```
+otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}},{$match:{"count_fake":{$gt:0}}}]).sort({"count_fake":1,"count_all":-1})```**
 ```js
 [
   { _id: 'Pam Key', count_fake: 1, count_all: 243 },
