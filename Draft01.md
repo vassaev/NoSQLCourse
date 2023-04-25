@@ -64,14 +64,20 @@ root        2395  3.2  9.7 2599784 96980 ?       Sl   15:52   0:00 mongod --dbpa
 ```
 
 Добавляем пользователя
+
 **mongosh --port 27001**
-*test> use admin
+
+*```
+test> use admin
 admin> db.createUser( { user: "root", pwd: "otus", roles: [ "userAdminAnyDatabase", "dbAdminAnyDatabase", "readWriteAnyDatabase" ] } )
-admin> exit*
+admin> exit```*
 
 добавляем security:authorization: enabled и bindIpAll: true
+
 **nano /etc/mongod.conf**
--- перестартуем
+
+перестартуем
+
 **systemctl restart mongod**
 
 ###Загрузка данных 
@@ -79,6 +85,7 @@ admin> exit*
 Данные по Fakenews с https://www.kaggle.com/competitions/fake-news/data?select=train.csv
 С помощью sftp загружаем данные в /var/www-data
 Загружаем данные в mongo
+
 **/home/vassaev# mongoimport --type csv -d otus -c fakenews --headerline /var/www-data/train.csv -u root --authenticationDatabase admin**
 ```log
 Enter password for mongo user:
@@ -104,7 +111,7 @@ Enter password for mongo user:
 Вывести 2 документа
 
 **otus> db.fakenews.find().limit(2)**
-```log
+```js
 [
   {
     _id: ObjectId("644560b571d671bf2b58cdd6"),
@@ -136,8 +143,9 @@ Enter password for mongo user:
 ```
 
 Количество фейков и всего статей по авторам
+
 **```otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}}])```**
-```json
+```js
 [
   { _id: 'Tara Siegel Bernard', count_fake: 0, count_all: 4 },
   { _id: 'Gretchen Reynolds', count_fake: 0, count_all: 10 },
