@@ -7,8 +7,10 @@
 > создать индексы и сравнить производительность.
 
 ## Решение
-1. Создал виртуальную машину в яндекс mdb1, пользователь vassaev
-2. Установил mongodb
+
+### Установка и настройка mongodb
+Создал виртуальную машину в яндекс mdb1, пользователь vassaev
+Установил mongodb
 
 **wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -**
 ```log
@@ -43,34 +45,37 @@ sudo rm /etc/apt/sources.list.d/focal-security.list**
 
 Далее - по инструкции
 
--- создадим каталог для данных
+создадим каталог для данных
 **root@mdb1:/home/vassaev# sudo mkdir /home/mongo && sudo mkdir /home/mongo/db1 && sudo chmod 777 /home/mongo/db1**
 
--- запустим монго с параметрами для этого каталога
+запустим монго с параметрами для этого каталога
 **root@mdb1:/home/vassaev# mongod --dbpath /home/mongo/db1 --port 27001 --fork --logpath /home/mongo/db1/db1.log --pidfilepath /home/mongo/db1/db1.pid**
 ```log
 about to fork child process, waiting until server is ready for connections.
 forked process: 2395
 child process started successfully, parent exiting
 ```
+
 **ps aux | grep mongo| grep -Ev "grep"**
 ```log
 root        2395  3.2  9.7 2599784 96980 ?       Sl   15:52   0:00 mongod --dbpath /home/mongo/db1 --port 27001 --fork --logpath /home/mongo/db1/db1.log --pidfilepath /home/mongo/db1/db1.pid
 ```
--- добавляем пользователя
+
+добавляем пользователя
 **mongosh --port 27001**
 *test> use admin
 admin> db.createUser( { user: "root", pwd: "otus", roles: [ "userAdminAnyDatabase", "dbAdminAnyDatabase", "readWriteAnyDatabase" ] } )
 admin> exit*
 
--- добавляем security:authorization: enabled и bindIpAll: true
+добавляем security:authorization: enabled и bindIpAll: true
 **nano /etc/mongod.conf**
 -- перестартуем
 **systemctl restart mongod**
 
-Загрузка данных с https://www.kaggle.com/competitions/fake-news/data?select=train.csv
+###Загрузка данных 
+Данные по Fakenews с https://www.kaggle.com/competitions/fake-news/data?select=train.csv
 С помощью sftp загружаем данные в /var/www-data
--- Загружаем данные в mongo
+Загружаем данные в mongo
 **/home/vassaev# mongoimport --type csv -d otus -c fakenews --headerline /var/www-data/train.csv -u root --authenticationDatabase admin**
 ```log
 Enter password for mongo user:
@@ -84,14 +89,14 @@ Enter password for mongo user:
 '''
 ```
 
--- Запросы
--- Всего документов
+№№№ Запросы
+Всего документов
 **otus> db.fakenews.countDocuments()**
 ```log
 20800
 ```
 
--- Вывести 2 документа
+Вывести 2 документа
 **otus> db.fakenews.find().limit(2)**
 ```log
 [
@@ -124,7 +129,7 @@ Enter password for mongo user:
 ]
 ```
 
--- Количество фейков и всего статей по авторам
+Количество фейков и всего статей по авторам
 **```otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}}])```**
 ```json
 [
@@ -169,9 +174,9 @@ Enter password for mongo user:
   },
   { _id: 'Natalie Dailey', count_fake: 7, count_all: 7 }
 ]
-Type "it" for more
 ```
 
+Рейтинг от правдивых до лгунов
 **```otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}}]).sort({"count_fake":1,"count_all":-1})```**
 ```json
 [
@@ -199,6 +204,7 @@ Type "it" for more
 Type "it" for more
 ```
 
+Авторы, которые допустили хотя бы одну фейковую новость
 **```otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}},{$match:{"count_fake":{$gt:0}}}]).sort({"count_fake":1,"count_all":-1})```**
 ```json
 [
