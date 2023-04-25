@@ -1,82 +1,78 @@
-Домашнее задание
+## Задание
+> установить MongoDB одним из способов: ВМ, докер;
+> заполнить данными;
+> написать несколько запросов на выборку и обновление данных
 
-    установить MongoDB одним из способов: ВМ, докер;
-    заполнить данными;
-    написать несколько запросов на выборку и обновление данных
-    Сдача ДЗ осуществляется в виде миниотчета.
+## Задание повышенной сложности
+> создать индексы и сравнить производительность.
 
-Задание повышенной сложности*
-создать индексы и сравнить производительность.
-----
+## Решение
+1. Создал виртуальную машину в яндекс mdb1, пользователь vassaev
+2. Установил mongodb
 
-Создал виртуальную машину в яндекс mdb1 пользователь vassaev
-vassaev@mdb1:~$ wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -
+**wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | sudo apt-key add -**
+```log
 Warning: apt-key is deprecated. Manage keyring files in trusted.gpg.d instead (see apt-key(8)).
 OK
-sudo su
-root@mdb1:/home/vassaev# echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
-deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse
-root@mdb1:/home/vassaev#
+```
 
-apt updated
+**sudo su**
+**echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list**
+```log
+deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse
+```
+
+**apt updated**
+```log
 W: https://repo.mongodb.org/apt/ubuntu/dists/focal/mongodb-org/6.0/Release.gpg: Key is stored in legacy trusted.gpg keyring (/etc/apt/trusted.gpg), see the DEPRECATION section in apt-key(8) for details.
-root@mdb1:/home/vassaev# apt-get install -y mongodb-org
+```
+
+**apt-get install -y mongodb-org**
+```log
 The following packages have unmet dependencies:
  mongodb-org-mongos : Depends: libssl1.1 (>= 1.1.1) but it is not installable
  mongodb-org-server : Depends: libssl1.1 (>= 1.1.1) but it is not installable
 E: Unable to correct problems, you have held broken packages.
-https://askubuntu.com/questions/1403619/mongodb-install-fails-on-ubuntu-22-04-depends-on-libssl1-1-but-it-is-not-insta
+```
+Возникли ошибки. Решено по https://askubuntu.com/questions/1403619/mongodb-install-fails-on-ubuntu-22-04-depends-on-libssl1-1-but-it-is-not-insta
 
-echo "deb http://security.ubuntu.com/ubuntu focal-security main" | sudo tee /etc/apt/sources.list.d/focal-security.list
+**echo "deb http://security.ubuntu.com/ubuntu focal-security main" | sudo tee /etc/apt/sources.list.d/focal-security.list
 sudo apt-get update
 sudo apt-get install libssl1.1
-sudo rm /etc/apt/sources.list.d/focal-security.list
------
-root@mdb1:/home/vassaev# sudo systemctl start mongod
-root@mdb1:/home/vassaev# sudo systemctl status mongod
-● mongod.service - MongoDB Database Server
-     Loaded: loaded (/lib/systemd/system/mongod.service; disabled; vendor preset:>
-     Active: active (running) since Sat 2023-04-22 21:39:08 UTC; 14s ago
-       Docs: https://docs.mongodb.org/manual
-   Main PID: 3645 (mongod)
-     Memory: 118.5M
-        CPU: 965ms
-     CGroup: /system.slice/mongod.service
-             └─3645 /usr/bin/mongod --config /etc/mongod.conf
+sudo rm /etc/apt/sources.list.d/focal-security.list**
 
-Apr 22 21:39:08 mdb1 systemd[1]: Started MongoDB Database Server.
-Остановим mongo
-///
+Далее - по инструкции
+
 -- создадим каталог для данных
-root@mdb1:/home/vassaev# sudo mkdir /home/mongo && sudo mkdir /home/mongo/db1 && sudo chmod 777 /home/mongo/db1
+**root@mdb1:/home/vassaev# sudo mkdir /home/mongo && sudo mkdir /home/mongo/db1 && sudo chmod 777 /home/mongo/db1**
+
 -- запустим монго с параметрами для этого каталога
-root@mdb1:/home/vassaev# mongod --dbpath /home/mongo/db1 --port 27001 --fork --logpath /home/mongo/db1/db1.log --pidfilepath /home/mongo/db1/db1.pid
+**root@mdb1:/home/vassaev# mongod --dbpath /home/mongo/db1 --port 27001 --fork --logpath /home/mongo/db1/db1.log --pidfilepath /home/mongo/db1/db1.pid**
+```log
 about to fork child process, waiting until server is ready for connections.
 forked process: 2395
 child process started successfully, parent exiting
-root@mdb1:/home/vassaev# ps aux | grep mongo| grep -Ev "grep"
+```
+**ps aux | grep mongo| grep -Ev "grep"**
+```log
 root        2395  3.2  9.7 2599784 96980 ?       Sl   15:52   0:00 mongod --dbpath /home/mongo/db1 --port 27001 --fork --logpath /home/mongo/db1/db1.log --pidfilepath /home/mongo/db1/db1.pid
+```
 -- добавляем пользователя
-root@mdb1:/home/vassaev# mongosh --port 27001
-Current Mongosh Log ID: 6445596b29fb6a677fb31eb0
-Connecting to:          mongodb://127.0.0.1:27001/?directConnection=true&serverSelectionTimeoutMS=2000&appName=mongosh+1.8.0
-Using MongoDB:          6.0.5
-Using Mongosh:          1.8.0
-.....
-test> use admin
-switched to db admin
+**mongosh --port 27001**
+*test> use admin
 admin> db.createUser( { user: "root", pwd: "otus", roles: [ "userAdminAnyDatabase", "dbAdminAnyDatabase", "readWriteAnyDatabase" ] } )
-{ ok: 1 }
-admin> exit
-root@mdb1:/home/vassaev#
--- добавляем security:authorization: enabled и bindIpAll: true
-root@mdb1:/home/vassaev# nano /etc/mongod.conf
+admin> exit*
 
------
--- Загрузка данных с https://www.kaggle.com/competitions/fake-news/data?select=train.csv
--- С помощью sftp загружаем данные в /var/www-data
+-- добавляем security:authorization: enabled и bindIpAll: true
+**nano /etc/mongod.conf**
+-- перестартуем
+**systemctl restart mongod**
+
+Загрузка данных с https://www.kaggle.com/competitions/fake-news/data?select=train.csv
+С помощью sftp загружаем данные в /var/www-data
 -- Загружаем данные в mongo
-root@mdb1:/home/vassaev# mongoimport --type csv -d otus -c fakenews --headerline /var/www-data/train.csv -u root --authenticationDatabase admin
+**/home/vassaev# mongoimport --type csv -d otus -c fakenews --headerline /var/www-data/train.csv -u root --authenticationDatabase admin**
+```log
 Enter password for mongo user:
 
 2023-04-23T16:45:41.453+0000    connected to: mongodb://localhost/
@@ -85,12 +81,19 @@ Enter password for mongo user:
 2023-04-23T16:45:50.453+0000    [#####################...] otus.fakenews        84.2MB/94.1MB (89.5%)
 2023-04-23T16:45:51.741+0000    [########################] otus.fakenews        94.1MB/94.1MB (100.0%)
 2023-04-23T16:45:51.741+0000    20800 document(s) imported successfully. 0 document(s) failed to import.
-root@mdb1:/home/vassaev#
---------
+'''
+```
+
 -- Запросы
-otus> db.fakenews.countDocuments()
+-- Всего документов
+**otus> db.fakenews.countDocuments()**
+```log
 20800
-otus> db.fakenews.find().limit(2)
+```
+
+-- Вывести 2 документа
+**otus> db.fakenews.find().limit(2)**
+```log
 [
   {
     _id: ObjectId("644560b571d671bf2b58cdd6"),
@@ -119,9 +122,11 @@ otus> db.fakenews.find().limit(2)
     label: 0
   }
 ]
-otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:$label}, count_all:{$sum:1}}}])
-ReferenceError: $label is not defined
-otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}}])
+```
+
+-- Количество фейков и всего статей по авторам
+**```otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}}])```**
+```json
 [
   { _id: 'Tara Siegel Bernard', count_fake: 0, count_all: 4 },
   { _id: 'Gretchen Reynolds', count_fake: 0, count_all: 10 },
@@ -165,87 +170,10 @@ otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"},
   { _id: 'Natalie Dailey', count_fake: 7, count_all: 7 }
 ]
 Type "it" for more
-otus> it
-[
-  { _id: 'A. F. Branco', count_fake: 1, count_all: 1 },
-  { _id: 'Adrienne Ross', count_fake: 0, count_all: 1 },
-  { _id: 'Janet Maslin', count_fake: 0, count_all: 2 },
-  { _id: 'Julia Hahn', count_fake: 0, count_all: 2 },
-  { _id: 'Vandita', count_fake: 3, count_all: 3 },
-  { _id: 'Consortiumnews.com', count_fake: 58, count_all: 58 },
-  { _id: 'Emily J. Weitz', count_fake: 0, count_all: 1 },
-  { _id: 'Editorial', count_fake: 7, count_all: 7 },
-  { _id: 'Jan Hoffman', count_fake: 0, count_all: 4 },
-  { _id: 'Nathaniel Mauka', count_fake: 1, count_all: 1 },
-  { _id: 'Ceylan Yeginsu', count_fake: 0, count_all: 4 },
-  { _id: 'Peter Baker and Sewell Chan', count_fake: 0, count_all: 1 },
-  { _id: 'Dyanne Weiss', count_fake: 3, count_all: 3 },
-  { _id: 'Susan Antilla', count_fake: 0, count_all: 1 },
-  { _id: 'JohnSmith2016', count_fake: 1, count_all: 1 },
-  { _id: 'Contributing Author', count_fake: 31, count_all: 31 },
-  { _id: 'Patsy Mendoza McBee', count_fake: 1, count_all: 1 },
-  { _id: 'Robert Ito', count_fake: 0, count_all: 3 },
-  {
-    _id: 'Geeta Anand and Julfikar Ali Manik',
-    count_fake: 0,
-    count_all: 1
-  },
-  { _id: 'Leeann Springer', count_fake: 1, count_all: 1 }
-]
-Type "it" for more
-otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}}]).sort({"count_fake":-1})
-[
-  { _id: NaN, count_fake: 1931, count_all: 1957 },
-  { _id: 'admin', count_fake: 193, count_all: 193 },
-  { _id: 'Pakalert', count_fake: 86, count_all: 86 },
-  { _id: 'Eddy Lavine', count_fake: 85, count_all: 85 },
-  { _id: 'Starkman', count_fake: 84, count_all: 84 },
-  { _id: 'Gillian', count_fake: 82, count_all: 82 },
-  { _id: 'Alex Ansary', count_fake: 82, count_all: 82 },
-  { _id: 'Editor', count_fake: 81, count_all: 81 },
-  {
-    _id: 'noreply@blogger.com (Alexander Light)',
-    count_fake: 80,
-    count_all: 80
-  },
-  { _id: 'Dave Hodges', count_fake: 77, count_all: 77 },
-  { _id: 'Anonymous', count_fake: 77, count_all: 77 },
-  { _id: 'IWB', count_fake: 75, count_all: 75 },
-  { _id: 'The European Union Times', count_fake: 74, count_all: 74 },
-  { _id: 'BareNakedIslam', count_fake: 74, count_all: 74 },
-  { _id: 'Activist Post', count_fake: 72, count_all: 72 },
-  { _id: 'The Doc', count_fake: 69, count_all: 69 },
-  { _id: 'EdJenner', count_fake: 69, count_all: 69 },
-  { _id: 'Henry Wolff', count_fake: 67, count_all: 67 },
-  { _id: 'Iron Sheik', count_fake: 66, count_all: 66 },
-  { _id: 'Mac Slavo', count_fake: 66, count_all: 66 }
-]
-Type "it" for more
-otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}}]).sort({"count_all":-1,"count_fake":1})
-[
-  { _id: NaN, count_fake: 1931, count_all: 1957 },
-  { _id: 'Pam Key', count_fake: 1, count_all: 243 },
-  { _id: 'admin', count_fake: 193, count_all: 193 },
-  { _id: 'Jerome Hudson', count_fake: 0, count_all: 166 },
-  { _id: 'Charlie Spiering', count_fake: 0, count_all: 141 },
-  { _id: 'John Hayward', count_fake: 0, count_all: 140 },
-  { _id: 'Katherine Rodriguez', count_fake: 0, count_all: 124 },
-  { _id: 'Warner Todd Huston', count_fake: 0, count_all: 122 },
-  { _id: 'Ian Hanchett', count_fake: 0, count_all: 119 },
-  { _id: 'Breitbart News', count_fake: 0, count_all: 118 },
-  { _id: 'Daniel Nussbaum', count_fake: 0, count_all: 112 },
-  { _id: 'AWR Hawkins', count_fake: 0, count_all: 107 },
-  { _id: 'Jeff Poor', count_fake: 0, count_all: 107 },
-  { _id: 'Joel B. Pollak', count_fake: 0, count_all: 106 },
-  { _id: 'Trent Baker', count_fake: 0, count_all: 102 },
-  { _id: 'Breitbart London', count_fake: 0, count_all: 97 },
-  { _id: 'Bob Price', count_fake: 0, count_all: 93 },
-  { _id: 'Ben Kew', count_fake: 0, count_all: 90 },
-  { _id: 'Charlie Nash', count_fake: 0, count_all: 88 },
-  { _id: 'Pakalert', count_fake: 86, count_all: 86 }
-]
-Type "it" for more
-otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}}]).sort({"count_fake":1,"count_all":-1})
+```
+
+**```otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}}]).sort({"count_fake":1,"count_all":-1})```**
+```json
 [
   { _id: 'Jerome Hudson', count_fake: 0, count_all: 166 },
   { _id: 'Charlie Spiering', count_fake: 0, count_all: 141 },
@@ -269,8 +197,10 @@ otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"},
   { _id: 'Penny Starr', count_fake: 0, count_all: 67 }
 ]
 Type "it" for more
-otus>
-otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}},{$match:{"count_fake":{$gt:0}}}]).sort({"count_fake":1,"count_all":-1})
+```
+
+**```otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}},{$match:{"count_fake":{$gt:0}}}]).sort({"count_fake":1,"count_all":-1})```**
+```json
 [
   { _id: 'Pam Key', count_fake: 1, count_all: 243 },
   { _id: 'AFP', count_fake: 1, count_all: 3 },
@@ -297,6 +227,7 @@ otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"},
   },
   { _id: 'Frankie', count_fake: 1, count_all: 1 }
 ]
+```
 -----
 db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}},{$set:{total:{$sum:"$count_all"}}},{$match:{"count_fake":{$gt:0}}}]).sort({"count_fake":1,"count_all":-1})
 db.fakenews.aggregate([
