@@ -67,10 +67,12 @@ root        2395  3.2  9.7 2599784 96980 ?       Sl   15:52   0:00 mongod --dbpa
 
 **mongosh --port 27001**
 
-*```
+**```
 test> use admin
+
 admin> db.createUser( { user: "root", pwd: "otus", roles: [ "userAdminAnyDatabase", "dbAdminAnyDatabase", "readWriteAnyDatabase" ] } )
-admin> exit```*
+
+admin> exit```**
 
 добавляем security:authorization: enabled и bindIpAll: true
 
@@ -80,7 +82,7 @@ admin> exit```*
 
 **systemctl restart mongod**
 
-###Загрузка данных 
+### Загрузка данных 
 
 Данные по Fakenews с https://www.kaggle.com/competitions/fake-news/data?select=train.csv
 С помощью sftp загружаем данные в /var/www-data
@@ -192,7 +194,7 @@ Enter password for mongo user:
 
 Рейтинг от правдивых до лгунов
 **```otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}}]).sort({"count_fake":1,"count_all":-1})```**
-```json
+```js
 [
   { _id: 'Jerome Hudson', count_fake: 0, count_all: 166 },
   { _id: 'Charlie Spiering', count_fake: 0, count_all: 141 },
@@ -215,12 +217,11 @@ Enter password for mongo user:
   { _id: 'Breitbart Jerusalem', count_fake: 0, count_all: 75 },
   { _id: 'Penny Starr', count_fake: 0, count_all: 67 }
 ]
-Type "it" for more
 ```
 
 Авторы, которые допустили хотя бы одну фейковую новость
 **```otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}},{$match:{"count_fake":{$gt:0}}}]).sort({"count_fake":1,"count_all":-1})```**
-```json
+```js
 [
   { _id: 'Pam Key', count_fake: 1, count_all: 243 },
   { _id: 'AFP', count_fake: 1, count_all: 3 },
