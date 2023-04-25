@@ -67,12 +67,10 @@ root        2395  3.2  9.7 2599784 96980 ?       Sl   15:52   0:00 mongod --dbpa
 
 **mongosh --port 27001**
 
-**```
-test> use admin
-
-admin> db.createUser( { user: "root", pwd: "otus", roles: [ "userAdminAnyDatabase", "dbAdminAnyDatabase", "readWriteAnyDatabase" ] } )
-
-admin> exit```**
+**```log
+use admin
+db.createUser( { user: "root", pwd: "otus", roles: [ "userAdminAnyDatabase", "dbAdminAnyDatabase", "readWriteAnyDatabase" ] } )
+exit```**
 
 добавляем security:authorization: enabled и bindIpAll: true
 
