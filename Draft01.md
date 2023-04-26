@@ -82,11 +82,9 @@ exit```**
 
 ### Загрузка данных 
 
-Данные по Fakenews с https://www.kaggle.com/competitions/fake-news/data?select=train.csv
-С помощью sftp загружаем данные в /var/www-data
-Загружаем данные в mongo
+Данные по Fakenews с https://www.kaggle.com/competitions/fake-news/data?select=train.csv с помощью sftp загружаем данные в /var/www-data
 
-**/home/vassaev# mongoimport --type csv -d otus -c fakenews --headerline /var/www-data/train.csv -u root --authenticationDatabase admin**
+**mongoimport --type csv -d otus -c fakenews --headerline /var/www-data/train.csv -u root --authenticationDatabase admin**
 ```log
 Enter password for mongo user:
 
@@ -251,6 +249,23 @@ otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"},
   { _id: 'Frankie', count_fake: 1, count_all: 1 }
 ]
 ```
+
+Пишут правду и ложь
+
+**```
+otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}},{$match:{$and:[{$expr:{$gt:["$count_all", "$count_fake"]}},{"count_fake":{$gt:0}}]}}]).sort({"count_fake":1,"count_all":-1})
+```**
+```js
+[
+  { _id: 'Pam Key', count_fake: 1, count_all: 243 },
+  { _id: 'AFP', count_fake: 1, count_all: 3 },
+  { _id: 'Reuters', count_fake: 2, count_all: 6 },
+  { _id: 'Pamela Geller', count_fake: 4, count_all: 5 },
+  { _id: 'Ann Coulter', count_fake: 5, count_all: 21 },
+  { _id: NaN, count_fake: 1931, count_all: 1957 }
+]
+```
+
 -----
 db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}},{$set:{total:{$sum:"$count_all"}}},{$match:{"count_fake":{$gt:0}}}]).sort({"count_fake":1,"count_all":-1})
 db.fakenews.aggregate([
