@@ -255,6 +255,7 @@ otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"},
 **```
 otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}},{$match:{$and:[{$expr:{$gt:["$count_all", "$count_fake"]}},{"count_fake":{$gt:0}}]}}]).sort({"count_fake":1,"count_all":-1})
 ```**
+
 ```js
 [
   { _id: 'Pam Key', count_fake: 1, count_all: 243 },
