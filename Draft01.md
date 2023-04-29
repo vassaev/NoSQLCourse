@@ -252,10 +252,9 @@ otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"},
 
 Пишут правду и ложь
 
-**```sh
+**```
 otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}},{$match:{$and:[{$expr:{$gt:["$count_all", "$count_fake"]}},{"count_fake":{$gt:0}}]}}]).sort({"count_fake":1,"count_all":-1})
 ```**
-
 ```js
 [
   { _id: 'Pam Key', count_fake: 1, count_all: 243 },
@@ -267,11 +266,379 @@ otus> db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"},
 ]
 ```
 
------
-db.fakenews.aggregate([{$group:{_id:"$author", count_fake:{$sum:"$label"}, count_all:{$sum:1}}},{$set:{total:{$sum:"$count_all"}}},{$match:{"count_fake":{$gt:0}}}]).sort({"count_fake":1,"count_all":-1})
-db.fakenews.aggregate([
-{
-$bucket:{groupBy:"$author", output:{count_fake:{$sum:"$label"}, count_all:{$sum:1}}}
-},
-{$match:{count_fake:{$lt:"$count_all"}}}
-]).sort({"count_fake":1,"count_all":-1})
+-------------------------------------------
+
+Включим профилирование всех запросов
+
+**db.setProfilingLevel(2)**
+
+Все авторы
+
+**db.fakenews.distinct("author")**
+
+```js
+[
+  NaN,
+  1777,
+  '# 1 NWO Hatr',
+  '-NO AUTHOR-',
+  '10 Habits That Will Make Your Life Easier &amp; More Peaceful - Wellness Solutions',
+  '10 More Beautiful Images That Remind You We Still Live In A Beautiful World, With Beautiful People - Upside Down Media',
+  '10 Movies That Could Change Your Understanding Of Life - Upside Down Media',
+  '10 Nutritious Foods That Help Reduce Asthma Attacks &amp; Boost Your Health - Health Alternative Solutions',
+  '10 Presidents &amp; Politicians Who Told Us That A “Secret Government” Controls The World &amp; What They Said - Upside Down Media',
+  '10 Shocking Facts About Society That We Absurdly Accept As Normal – Digital Flow',
+  '11 Things To Let Go Of Before The New Year',
+  '11 Things To Let Go Of Before The New Year – Motivate3.com',
+  '19 Documentaries That Will Have An Impact On Your Life | Coffs Coast Health Club',
+  '1980XLS',
+  '1A. The History and Future of Sleep:',
+  '2012newstart',
+  '2noxtnt',
+  '3 Easy Salad Recipes To Help Control Diabetes – Collective Evolution | intopurification',
+  '4 Goals For The Neomasculinity Movement During Trump’s First Term',
+  '4 of the Best Kinds of Milk That Aren’t Dairy – Collective Evolution | APG Editorial',
+  '5 Ways You Can Start Feeling Better About Yourself Right Now – Collective Evolution',
+  '500 Year Old Map Discovered Shatters The Official History Of The Human Race',
+  '6 Steps to Becoming the Best Leader Possible – Motivate3.com',
+  '7 Harsh Realities That Come With Taking Full Responsibility For Your Life – Motivate3.com',
+  ':ohemad: (UID 73271507)',
+  'A Jew (UID 73270427)',
+  'A. F. Branco',
+  'A. Griffee',
+  'A. Maren',
+  'A. O. Scott',
+  'A.D.H.D. NATION: HOW BIG PHARMA CREATED THE A.D.H.D. EPIDEMIC - Black Barth',
+  'A.O. Scott',
+  'A.O. Scott and Manohla Dargis',
+  'AAPI Rex',
+  'AARGH63',
+  'ACT I',
+  'AFP',
+  'AFRICA-NEWS',
+  'AP',
+  'AR Staff',
+  'AUTUMN',
+  'AWR Hawkins',
+  'AZU',
+  'Aaron E. Carroll',
+  'Aaron E. Carroll and Austin Frakt',
+  'Aaron Kesel',
+  'Aaron Klein',
+  'Aaron Klein and Ali Waked',
+  'Abby Ellin',
+  'Abby Goodnough',
+  'Abby Goodnough and Jonathan Martin',
+  'Abby Goodnough and Mitch Smith',
+  'Abby Goodnough and Sabrina Tavernise',
+  'Abby Goodnough and Scott Atkinson',
+  'Abby Goodnough, Robert Pear and Thomas Kaplan',
+  'Abramo',
+  'Activist Post',
+  'ActivistPost',
+  'Adalia Woodbury',
+  'Adam Dick',
+  'Adam Garrie',
+  'Adam Goldman',
+  'Adam Goldman and Alan Blinder',
+  'Adam Goldman and Christopher Mele',
+  'Adam Goldman and Eric Schmitt',
+  'Adam Goldman and Matt Apuzzo',
+  'Adam Goldman and Michael S. Schmidt',
+  'Adam Goldman, Eric Lichtblau and Matt Apuzzo',
+  'Adam Goldman, Hiroko Tabuchi and Jack Ewing',
+  'Adam Kirsch',
+  'Adam Liptak',
+  'Adam Liptak and Alexandra Alter',
+  'Adam Liptak and Michael D. Shear',
+  'Adam Liptak, Peter Baker, Nicholas Fandos and Julie Turkewitz',
+  'Adam Nagourney',
+  'Adam Nagourney and Erik Eckholm',
+  'Adam Nagourney and Henry Fountain',
+  'Adam Nagourney and Ian Lovett',
+  'Adam Nagourney and Jennifer Medina',
+  'Adam Nagourney and Jonathan Martin',
+  'Adam Nagourney and Sharon Otterman',
+  'Adam Nossiter',
+  'Adam Nossiter and Elizabeth Paton',
+  'Adam Parsons',
+  'Adam Popescu',
+  'Adam Shaw',
+  'Adam Zagoria',
+  'Adan Salazar',
+  'Adeel Hassan',
+  'Adelle Nazarian',
+  'Adelle Nazarian &amp Edwin Mora',
+  'Admin',
+  'Admin - Orissa',
+  'Adoriasoft',
+  'Adpres Media - Adpres.net',
+  'Adrian Bamforth',
+  'Adrienne Ross',
+  "Aer O'Head",
+  'Agent P',
+  'Ain’t No Sunshine: Seasonal SADness and Magnesium | Activation Health',
+  ... 4102 more items
+]
+```
+
+Профиль запроса
+
+**db.system.profile.find().sort({$natural:-1})**
+```js
+[
+  {
+    op: 'command',
+    ns: 'otus.fakenews',
+    command: {
+      distinct: 'fakenews',
+      key: 'author',
+      query: {},
+      lsid: { id: new UUID("ca96d740-78c6-4e33-9d69-b7cb851c567c") },
+      '$db': 'otus'
+    },
+    keysExamined: 0,
+    docsExamined: 20800,
+    numYield: 20,
+    queryHash: '17830885',
+    queryFramework: 'classic',
+    locks: {
+      FeatureCompatibilityVersion: { acquireCount: { r: Long("21") } },
+      Global: { acquireCount: { r: Long("21") } },
+      Mutex: { acquireCount: { r: Long("1") } }
+    },
+    flowControl: {},
+    responseLength: 134165,
+    protocol: 'op_msg',
+    millis: 35,
+    planSummary: 'COLLSCAN',
+    execStats: {
+      stage: 'COLLSCAN',
+      nReturned: 20800,
+      executionTimeMillisEstimate: 0,
+      works: 20802,
+      advanced: 20800,
+      needTime: 1,
+      needYield: 0,
+      saveState: 20,
+      restoreState: 20,
+      isEOF: 1,
+      direction: 'forward',
+      docsExamined: 20800
+    },
+    ts: ISODate("2023-04-29T04:31:16.879Z"),
+    client: '127.0.0.1',
+    appName: 'mongosh 1.8.0',
+    allUsers: [ { user: 'root', db: 'admin' } ],
+    user: 'root@admin'
+  }
+]
+```
+
+Обратим внимание:
+
+*millis: 35
+planSummary: 'COLLSCAN'
+works: 20802*
+
+Создадим индекс
+
+**db.fakenews.createIndex({"author":1})**
+
+author_1
+
+Проверим список индексов
+
+**db.fakenews.getIndexes()**
+
+```js
+[
+  { v: 2, key: { _id: 1 }, name: '_id_' },
+  { v: 2, key: { author: 1 }, name: 'author_1' }
+]
+```
+
+Ещё раз тяжёлый запрос
+
+**db.fakenews.distinct("author")**
+
+```js
+[
+  NaN,
+  1777,
+  '# 1 NWO Hatr',
+  '-NO AUTHOR-',
+  '10 Habits That Will Make Your Life Easier &amp; More Peaceful - Wellness Solutions',
+  '10 More Beautiful Images That Remind You We Still Live In A Beautiful World, With Beautiful People - Upside Down Media',
+  '10 Movies That Could Change Your Understanding Of Life - Upside Down Media',
+  '10 Nutritious Foods That Help Reduce Asthma Attacks &amp; Boost Your Health - Health Alternative Solutions',
+  '10 Presidents &amp; Politicians Who Told Us That A “Secret Government” Controls The World &amp; What They Said - Upside Down Media',
+  '10 Shocking Facts About Society That We Absurdly Accept As Normal – Digital Flow',
+  '11 Things To Let Go Of Before The New Year',
+  '11 Things To Let Go Of Before The New Year – Motivate3.com',
+  '19 Documentaries That Will Have An Impact On Your Life | Coffs Coast Health Club',
+  '1980XLS',
+  '1A. The History and Future of Sleep:',
+  '2012newstart',
+  '2noxtnt',
+  '3 Easy Salad Recipes To Help Control Diabetes – Collective Evolution | intopurification',
+  '4 Goals For The Neomasculinity Movement During Trump’s First Term',
+  '4 of the Best Kinds of Milk That Aren’t Dairy – Collective Evolution | APG Editorial',
+  '5 Ways You Can Start Feeling Better About Yourself Right Now – Collective Evolution',
+  '500 Year Old Map Discovered Shatters The Official History Of The Human Race',
+  '6 Steps to Becoming the Best Leader Possible – Motivate3.com',
+  '7 Harsh Realities That Come With Taking Full Responsibility For Your Life – Motivate3.com',
+  ':ohemad: (UID 73271507)',
+  'A Jew (UID 73270427)',
+  'A. F. Branco',
+  'A. Griffee',
+  'A. Maren',
+  'A. O. Scott',
+  'A.D.H.D. NATION: HOW BIG PHARMA CREATED THE A.D.H.D. EPIDEMIC - Black Barth',
+  'A.O. Scott',
+  'A.O. Scott and Manohla Dargis',
+  'AAPI Rex',
+  'AARGH63',
+  'ACT I',
+  'AFP',
+  'AFRICA-NEWS',
+  'AP',
+  'AR Staff',
+  'AUTUMN',
+  'AWR Hawkins',
+  'AZU',
+  'Aaron E. Carroll',
+  'Aaron E. Carroll and Austin Frakt',
+  'Aaron Kesel',
+  'Aaron Klein',
+  'Aaron Klein and Ali Waked',
+  'Abby Ellin',
+  'Abby Goodnough',
+  'Abby Goodnough and Jonathan Martin',
+  'Abby Goodnough and Mitch Smith',
+  'Abby Goodnough and Sabrina Tavernise',
+  'Abby Goodnough and Scott Atkinson',
+  'Abby Goodnough, Robert Pear and Thomas Kaplan',
+  'Abramo',
+  'Activist Post',
+  'ActivistPost',
+  'Adalia Woodbury',
+  'Adam Dick',
+  'Adam Garrie',
+  'Adam Goldman',
+  'Adam Goldman and Alan Blinder',
+  'Adam Goldman and Christopher Mele',
+  'Adam Goldman and Eric Schmitt',
+  'Adam Goldman and Matt Apuzzo',
+  'Adam Goldman and Michael S. Schmidt',
+  'Adam Goldman, Eric Lichtblau and Matt Apuzzo',
+  'Adam Goldman, Hiroko Tabuchi and Jack Ewing',
+  'Adam Kirsch',
+  'Adam Liptak',
+  'Adam Liptak and Alexandra Alter',
+  'Adam Liptak and Michael D. Shear',
+  'Adam Liptak, Peter Baker, Nicholas Fandos and Julie Turkewitz',
+  'Adam Nagourney',
+  'Adam Nagourney and Erik Eckholm',
+  'Adam Nagourney and Henry Fountain',
+  'Adam Nagourney and Ian Lovett',
+  'Adam Nagourney and Jennifer Medina',
+  'Adam Nagourney and Jonathan Martin',
+  'Adam Nagourney and Sharon Otterman',
+  'Adam Nossiter',
+  'Adam Nossiter and Elizabeth Paton',
+  'Adam Parsons',
+  'Adam Popescu',
+  'Adam Shaw',
+  'Adam Zagoria',
+  'Adan Salazar',
+  'Adeel Hassan',
+  'Adelle Nazarian',
+  'Adelle Nazarian &amp Edwin Mora',
+  'Admin',
+  'Admin - Orissa',
+  'Adoriasoft',
+  'Adpres Media - Adpres.net',
+  'Adrian Bamforth',
+  'Adrienne Ross',
+  "Aer O'Head",
+  'Agent P',
+  'Ain’t No Sunshine: Seasonal SADness and Magnesium | Activation Health',
+  ... 4102 more items
+]
+```
+
+Профиль запроса
+
+**db.system.profile.find().sort({$natural:-1})**
+
+```js
+[
+  {
+    op: 'command',
+    ns: 'otus.fakenews',
+    command: {
+      distinct: 'fakenews',
+      key: 'author',
+      query: {},
+      lsid: { id: new UUID("ca96d740-78c6-4e33-9d69-b7cb851c567c") },
+      '$db': 'otus'
+    },
+    keysExamined: 4202,
+    docsExamined: 0,
+    numYield: 4,
+    locks: {
+      FeatureCompatibilityVersion: { acquireCount: { r: Long("5") } },
+      Global: { acquireCount: { r: Long("5") } },
+      Mutex: { acquireCount: { r: Long("1") } }
+    },
+    flowControl: {},
+    responseLength: 134165,
+    protocol: 'op_msg',
+    millis: 22,
+    planSummary: 'DISTINCT_SCAN { author: 1 }',
+    execStats: {
+      stage: 'PROJECTION_COVERED',
+      nReturned: 4202,
+      executionTimeMillisEstimate: 0,
+      works: 4203,
+      advanced: 4202,
+      needTime: 0,
+      needYield: 0,
+      saveState: 4,
+      restoreState: 4,
+      isEOF: 1,
+      transformBy: {},
+      inputStage: {
+        stage: 'DISTINCT_SCAN',
+        nReturned: 4202,
+        executionTimeMillisEstimate: 0,
+        works: 4203,
+        advanced: 4202,
+        needTime: 0,
+        needYield: 0,
+        saveState: 4,
+        restoreState: 4,
+        isEOF: 1,
+        keyPattern: { author: 1 },
+        indexName: 'author_1',
+        isMultiKey: false,
+        multiKeyPaths: { author: [] },
+        isUnique: false,
+        isSparse: false,
+        isPartial: false,
+        indexVersion: 2,
+        direction: 'forward',
+        indexBounds: { author: [ '[MinKey, MaxKey]' ] },
+        keysExamined: 4202
+      }
+   }
+]
+```
+
+Обратим внимание
+
+*millis: 22
+planSummary: 'DISTINCT_SCAN { author: 1 }',
+works: 4203*
+
