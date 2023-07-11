@@ -26,7 +26,7 @@ OK
 deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/6.0 multiverse
 ```
 
-**apt updated**
+**apt update**
 
 ```log
 W: https://repo.mongodb.org/apt/ubuntu/dists/focal/mongodb-org/6.0/Release.gpg: Key is stored in legacy trusted.gpg keyring (/etc/apt/trusted.gpg), see the DEPRECATION section in apt-key(8) for details.
@@ -43,10 +43,13 @@ E: Unable to correct problems, you have held broken packages.
 
 Возникли ошибки. Решено по https://askubuntu.com/questions/1403619/mongodb-install-fails-on-ubuntu-22-04-depends-on-libssl1-1-but-it-is-not-insta
 
-**echo "deb http://security.ubuntu.com/ubuntu focal-security main" | sudo tee /etc/apt/sources.list.d/focal-security.list
-sudo apt-get update
-sudo apt-get install libssl1.1
-sudo rm /etc/apt/sources.list.d/focal-security.list**
+**echo "deb http://security.ubuntu.com/ubuntu focal-security main" | sudo tee /etc/apt/sources.list.d/focal-security.list**
+
+**sudo apt-get update**
+
+**sudo apt-get install libssl1.1**
+
+**sudo rm /etc/apt/sources.list.d/focal-security.list**
 
 Далее - по инструкции
 
